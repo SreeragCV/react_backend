@@ -1,11 +1,11 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 
 import Places from "./components/Places.jsx";
 import Modal from "./components/Modal.jsx";
 import DeleteConfirmation from "./components/DeleteConfirmation.jsx";
 import logoImg from "./assets/logo.png";
 import AvailablePlaces from "./components/AvailablePlaces.jsx";
-import { updateUserPlaces } from "./http.js";
+import { fetchUserPlaces, updateUserPlaces } from "./http.js";
 import Error from "./components/Error.jsx";
 
 function App() {
@@ -17,6 +17,18 @@ function App() {
 
   const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState();
 
+  useEffect(() => {
+    // backend data
+    async function fetchingUserPlaces() {
+      try {
+        const places = await fetchUserPlaces();
+        setUserPlaces(places);
+      } catch (e) {}
+    }
+
+    fetchingUserPlaces();
+  }, []);
+
   function handleStartRemovePlace(place) {
     setModalIsOpen(true);
     selectedPlace.current = place;
@@ -27,6 +39,7 @@ function App() {
   }
 
   async function handleSelectPlace(selectedPlace) {
+    // frontend update
     setUserPlaces((prevPickedPlaces) => {
       if (!prevPickedPlaces) {
         prevPickedPlaces = [];
@@ -37,6 +50,7 @@ function App() {
       return [selectedPlace, ...prevPickedPlaces];
     });
 
+    // backend update
     try {
       await updateUserPlaces([selectedPlace, ...userPlaces]);
     } catch (e) {
@@ -47,13 +61,31 @@ function App() {
     }
   }
 
-  const handleRemovePlace = useCallback(async function handleRemovePlace() {
-    setUserPlaces((prevPickedPlaces) =>
-      prevPickedPlaces.filter((place) => place.id !== selectedPlace.current.id)
-    );
+  const handleRemovePlace = useCallback(
+    // frontend update
+    async function handleRemovePlace() {
+      setUserPlaces((prevPickedPlaces) =>
+        prevPickedPlaces.filter(
+          (place) => place.id !== selectedPlace.current.id
+        )
+      );
 
-    setModalIsOpen(false);
-  }, []);
+      // backend update
+      try {
+        await updateUserPlaces(
+          userPlaces.filter((place) => place.id !== selectedPlace.current.id)
+        );
+      } catch (e) {
+        setUserPlaces(userPlaces);
+        setErrorUpdatingPlaces({
+          message: e.message || "error deleting image..",
+        });
+      }
+
+      setModalIsOpen(false);
+    },
+    [userPlaces]
+  );
 
   function errorHandle() {
     setErrorUpdatingPlaces(null);
