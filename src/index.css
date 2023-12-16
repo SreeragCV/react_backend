@@ -211,6 +211,7 @@ header p {
 }
 
 .error {
+  border-radius: 25px;
   max-width: 40rem;
   margin: 1rem auto;
   padding: 1rem;
