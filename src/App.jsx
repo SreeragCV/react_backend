@@ -17,13 +17,24 @@ function App() {
 
   const [errorUpdatingPlaces, setErrorUpdatingPlaces] = useState();
 
+  const [isFetching, setIsFetching] = useState(false);
+
+  const [error, setError] = useState();
+
   useEffect(() => {
     // backend data
     async function fetchingUserPlaces() {
       try {
+        setIsFetching(true);
         const places = await fetchUserPlaces();
         setUserPlaces(places);
-      } catch (e) {}
+      } catch (e) {
+        setError({
+          message: e.message || "An error occured, please try again..",
+        });
+      }
+
+      setIsFetching(false);
     }
 
     fetchingUserPlaces();
@@ -56,11 +67,10 @@ function App() {
         (place) => place.id === selectedPlace.id
       );
 
-      console.log('already chosen....', alreadyChosen.length);
-      console.log('selected place....', selectedPlace);
+      console.log("already chosen....", alreadyChosen.length);
+      console.log("selected place....", selectedPlace);
 
       if (alreadyChosen.length > 0) {
-        
       } else {
         await updateUserPlaces([selectedPlace, ...userPlaces]);
       }
@@ -130,12 +140,17 @@ function App() {
         </p>
       </header>
       <main>
-        <Places
-          title="I'd like to visit ..."
-          fallbackText="Select the places you would like to visit below."
-          places={userPlaces}
-          onSelectPlace={handleStartRemovePlace}
-        />
+        {error && <Error title="An Error Occured.." message={error.message} />}
+        {!error && (
+          <Places
+            isLoading={isFetching}
+            loadingText="fetching user places.."
+            title="I'd like to visit ..."
+            fallbackText="Select the places you would like to visit below."
+            places={userPlaces}
+            onSelectPlace={handleStartRemovePlace}
+          />
+        )}
 
         <AvailablePlaces onSelectPlace={handleSelectPlace} />
       </main>
