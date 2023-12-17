@@ -52,7 +52,18 @@ function App() {
 
     // backend update
     try {
-      await updateUserPlaces([selectedPlace, ...userPlaces]);
+      const alreadyChosen = userPlaces.filter(
+        (place) => place.id === selectedPlace.id
+      );
+
+      console.log('already chosen....', alreadyChosen.length);
+      console.log('selected place....', selectedPlace);
+
+      if (alreadyChosen.length > 0) {
+        
+      } else {
+        await updateUserPlaces([selectedPlace, ...userPlaces]);
+      }
     } catch (e) {
       setUserPlaces(userPlaces);
       setErrorUpdatingPlaces({
